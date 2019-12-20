@@ -8,42 +8,36 @@ from time import time
 # from be.model import error
 # from be.model.db_conn import myuser,store
 from model import error
-from model.db_conn import myuser,store
+from model.db_conn import myuser,store,orderlist,extra_func
 
 engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',echo = True)
 DBSession = sessionmaker(bind=engine)
 
-def get_user(user_id):
-    session = DBSession()
-    find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
-    session.close()
-    return find_user
-
+func = extra_func()
 class loginout_action:
     def login(self,user_id,pwd,ter):
         session = DBSession()
         # 只需要修改登陆时间即可
-        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
-        if find_user == None: 
+        if func.user_id_exist(user_id) == False: 
             session.close()
             return error.error_non_exist_user_id(user_id)  # 用户名错误 #511
         else:
-            now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
+            # now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
+            now_user = func.get_user(user_id)
             pwd_tag = now_user.check_password(pwd)
             if pwd_tag == False:
                 session.close()
                 return error.error_authorization_fail()  # 密码错误
             else:
                 print("@@@@@@@@@@@@@@@@@",user_id)                 
-                session.query(myuser).filter(myuser.user_id == user_id).update({'login_at':time(),'terminal':ter})
+                session.query(myuser).filter(myuser.user_id == user_id).update({'login_at' : time(), 'terminal' : ter})
                 session.commit()
                 session.close()
                 return 200,"ok"
     
     def logout(self,user_id):
         session = DBSession()
-        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
-        if find_user != None:
+        if func.user_id_exist(user_id) == True:
             session.close()
             return 200,"ok"
         else:
@@ -52,12 +46,11 @@ class loginout_action:
 
     def change_password(self,user_id,oldpwd,newpwd):
         session = DBSession()
-        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
-        if find_user == None:
+        if func.user_id_exist(user_id) == False:
             session.close()
             return error.error_authorization_fail() # 更改密码失败
         else:
-            now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
+            now_user = func.get_user(user_id)
             pwd_tag = now_user.check_password(oldpwd)
             if pwd_tag == False:
                 session.close()
@@ -67,7 +60,7 @@ class loginout_action:
                 return error.error_and_message_code(520) # 更改密码失败
             else:
                 newpwd_hash = generate_password_hash(newpwd)
-                session.query(myuser).filter(myuser.user_id == user_id).update({'user_password':newpwd_hash})
+                session.query(myuser).filter(myuser.user_id == user_id).update({'user_password' : newpwd_hash})
                 session.commit()
                 session.close()
                 return 200,"ok"
@@ -75,22 +68,25 @@ class loginout_action:
 class register_action:
     def register(self,user_id,pwd):
         session = DBSession()
-        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
-        if find_user != None:
+        if len(user_id) == 0:
+            return error.error_and_message_code(521)
+        if len(pwd) == 0:
+            return error.error_and_message_code(522)
+        if func.user_id_exist(user_id) == True:
             session.close()
             return error.error_exist_user_id(user_id) # 注册失败，用户名重复
         else:
             new_user = myuser(
             user_id = user_id,
             user_money = 0,
-            # user_address = 'you know',
-            # user_tel = 1313,
+            user_address = 'you know',
+            user_tel = 1313,
             user_password = generate_password_hash(pwd),
             terminal = user_id,
-            # seller_or_not = False, # ????要不要
+            seller_or_not = False, # ????要不要
             login_at = time()
             )
-            print(new_user.user_password)
+            # print(new_user.user_password)
             session.add(new_user)
             session.commit()
             session.close()
@@ -98,18 +94,54 @@ class register_action:
 
     def unregister(self,user_id,pwd): ## 有一个问题是注销什么身份呢？如果
         session = DBSession()
-        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
-        if find_user == None:
+        if func.user_id_exist(user_id) == False:
             session.close()
             return error.error_authorization_fail() # 注销失败，用户名不存在
         else:
-            now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
+            now_user = func.get_user(user_id)
             right_pwd = now_user.check_password(pwd)
             if right_pwd == False:
                 return error.error_authorization_fail()  # 注销失败，密码不正确
             else:
-                session.query(myuser).filter(myuser.user_id == user_id).delete() ## 这个是否需要删除
-                session.query(store).filter(store.owner_id == user_id).delete()  # 删除商家门店信息
-                session.commit()
-                return 200,"ok"
+                if now_user.seller_or_not == True:
+                    return error.error_and_message_code(524)
+                else:
+                    if func.user_have_order_or_not(user_id) == False:
+                        session.query(myuser).filter(myuser.user_id == user_id).delete() ## 这个是否需要删除
+                        session.commit()
+                        return 200,"ok"
+                    else:
+                        user_order = func.get_order_info(user_id)
+                        if user_order.order_status == 3 | user_order.order_status < 0:
+                            session.query(myuser).filter(myuser.user_id == user_id).delete() ## 这个是否需要删除
+                            session.commit()
+                            return 200,"ok"
+                        else:
+                            return error.error_and_message_code(525)
+        
+    def unregister_seller(self,seller_id,pwd): ## 注销一个seller
+        session = DBSession()
+        if func.user_id_exist(seller_id) == False:
+            session.close()
+            return error.error_authorization_fail() # 注销失败，用户名不存在
+        else:
+            now_user = func.get_user(seller_id)
+            right_pwd = now_user.check_password(pwd)
+            if right_pwd == False:
+                return error.error_authorization_fail()  # 注销失败，密码不正确
+            else:
+                if now_user.seller_or_not == False:
+                    return error.error_and_message_code(524)
+                else:
+                    user_order = func.get_order_info_seller(seller_id)
+                    if user_order.order_status == 3 | user_order.order_status < 0:
+                        session.query(store).filter(store.owner_id == seller_id).delete()  # 删除商家门店信息
+                        session.query(myuser).filter(myuser.user_id == seller_id).update({'seller_or_not' : False})
+                        session.commit()
+                        return 200,"ok"
+                    else:
+                        return error.error_and_message_code(523)
+                   
+                
+                
 

@@ -2,13 +2,12 @@ from flask import Flask, jsonify,request,current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer # 生产token
 from itsdangerous import BadSignature, SignatureExpired  
 # from be.model import user
-from model import user
+from model.db_conn import extra_func
 from flask_httpauth import HTTPTokenAuth
 import functools
-
+func = extra_func()
 # class a_token:
 #     token = ''
-
 def generate_auth_token(user_id, ter, expiration=7200):  # 2min过期
     current_app.config["SECRET_KEY"] = '1234'
     serializer = Serializer(current_app.config["SECRET_KEY"], expires_in=expiration)
@@ -27,7 +26,7 @@ def verify_token(token):
     except BadSignature:
         return None
     #拿到转换后的数据，根据模型类去数据库查询用户信息
-    now_user = user.get_user(data['user_id'])
+    now_user = func.get_user(data['user_id'])
     return now_user
 
 # def login_required(view_func):

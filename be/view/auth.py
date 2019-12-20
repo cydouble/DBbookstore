@@ -60,12 +60,12 @@ def logout():
     logo = user.loginout_action()
     global token
     print("@@@@@@@@@@@@@@@@@",token)
-    user = about_token.verify_token(token)
-    if user != None:
+    user_exit = about_token.verify_token(token)
+    if user_exit != None:
       code,msg = logo.logout(user_info.get('username'))
-      return jsonify({"message":msg})
+      return jsonify({"message":msg}),code
     else:
-      return jsonify({'message':"logout failed for bad token"}),code
+      return jsonify({'message':"logout failed for bad token you do not login"})
 
 @bp.route("/password", methods=("GET", "POST"))  # 指定请求方式，如果不指定，则无法匹配到请求
 def change_pwd():
