@@ -1,19 +1,21 @@
-from sqlalchemy import Column,String,Integer,Boolean,Time,ForeignKey,Text
+from sqlalchemy import Column,String,Integer,Boolean,Time,ForeignKey,Text,func
 from sqlalchemy import create_engine,PrimaryKeyConstraint
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from werkzeug.security import generate_password_hash,check_password_hash    # 转换密码用到的库
+import uuid
 import random
 from time import time
-# from be.model import error
-# from be.model.db_conn import myuser,store
-from model import error
-from model.db_conn import myuser,store,orderlist,store_booklist,store_bookstorage,extra_func
+# pytest
+from be.model import error
+from be.model.db_conn import myuser,store,orderlist,store_booklist,store_bookstorage,extra_func
+# from model import error
+# from model.db_conn import myuser,store,orderlist,store_booklist,store_bookstorage,extra_func
 
 engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',echo = True)
 DBSession = sessionmaker(bind=engine)
 
-func = extra_func()
+func1 = extra_func()
 session = DBSession()
 
 
@@ -27,55 +29,60 @@ class buyer_action:
                  buy_book_list：下单图书列表 (book_id, count)
         @:return: order_id
         """
-
-        order_id = ""
+        
+        new_order_id = ""
         # 创建session对象
-        session = DBSession()
+        session.begin()
         find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
         find_store = session.query(store).filter(store.store_id == store_id).first()
         if find_user is None:
             session.close()
-            return error.error_non_exist_user_id(user_id),order_id  # 买家用户ID不存在  # 511
+            return error.error_non_exist_user_id(user_id),new_order_id  # 买家用户ID不存在  # 511
 
         if find_store is None:
             session.close()
-            return error.error_non_exist_store_id(store_id),order_id  # 商铺ID不存在  # 513
+            return error.error_non_exist_store_id(store_id),new_order_id  # 商铺ID不存在  # 513
 
         if find_user is not None and find_store is not None:
             now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
             now_store = session.query(store).filter(store.store_id == store_id).one()
             new_order_id = uuid.uuid1()
             for book_id, count in buy_book_list:
+
                 find_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id).first()
                 # 在该商铺中判断是否有该图书
                 if find_book is None:
+                    session.rollback()
                     session.close()
-                    return error.error_non_exist_book_id(book_id),order_id  # 该图书不存在  # 515
+                    return error.error_non_exist_book_id(book_id),new_order_id  # 该图书不存在  # 515
                 else:
-                    now_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id).one()
+                    now_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id,store_bookstorage.store_id== store_id).one()
                     stock_number = now_book.storage
                     if stock_number < count:
+                        session.rollback()
                         session.close()
-                        return error.error_stock_level_low(book_id),order_id  # 商品库存不足  # 517
+                        return error.error_stock_level_low(book_id),new_order_id  # 商品库存不足  # 517
                     else:
                         # 减库存
                         now_book.storage = stock_number - 1
                         # 添加新的订单信息
                         new_order = orderlist(
-                            order_id=new_order_id,
-                            user_id=now_user.user_id,
-                            store_id=now_store.store_id,
-                            owner_id=now_store.owner_id,
-                            book_id=book_id,
-                            book_num=count,
-                            order_money=count * now_book.price,
-                            order_status=0,
-                            order_time=time.time())
+                            order_id = new_order_id,
+                            user_id = now_user.user_id,
+                            store_id = now_store.store_id,
+                            owner_id = now_store.owner_id,
+                            book_id = book_id,
+                            book_num = count,
+                            order_money = count * now_book.price,
+                            order_status = 0,
+                            order_time = time())
                         session.add(new_order)
                         session.commit()
 
             session.close()
-            return 200, "ok", order_id
+            result = (200,"ok")
+            return result, new_order_id
+
 
     def payment(self, user_id, pwd, order_id):
         """"
@@ -84,7 +91,8 @@ class buyer_action:
                  order_id：订单id (str)
         @:return: status code：交易状态的识别码
         """
-        session = DBSession()
+
+        session.begin()
         find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
         if find_user is None:
             session.close()
@@ -100,7 +108,7 @@ class buyer_action:
                 # get_order_id = order_id.split(',')
                 # for one_order_id in get_order_id:
                 find_order = session.query(orderlist).filter(orderlist.order_id == order_id).first()
-                if find_order is None:
+                if (find_order is None) or (find_order.order_status != 0):
                     session.close()
                     return error.error_invalid_order_id(order_id)  # 无效订单 # 518
                 else:
@@ -133,8 +141,8 @@ class buyer_action:
                  add_value：充值金额 (int)
         @:return: status code：交易状态的识别码
         """
-        print('this is add_funds')
-        session = DBSession()
+
+        session.begin()
         find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
         if find_user is None:
             session.close()
@@ -146,12 +154,12 @@ class buyer_action:
                 session.close()
                 return error.error_authorization_fail()  # 密码不正确，授权失败 # 401
             else:
-                if add_value < 0:
+                now_user.user_money = now_user.user_money + add_value
+                if  now_user.user_money < 0:
                     session.close()
                     return error.error_invalid_add_value(add_value)
                 else:
                     # 修改用户账户金额
-                    now_user.user_money = now_user.user_money + add_value
                     session.add(now_user)
                     session.commit()
                     session.close()
@@ -319,7 +327,7 @@ class search_bookstore_action:
     #             return error.error_and_message_code(526)
     #         return 200, book_onsale
     def search_book_title(self, book_title, store_id): # 标题搜索（考虑original title）
-        if func.store_id_exist == False:
+        if func1.store_id_exist == False:
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -342,7 +350,7 @@ class search_bookstore_action:
             return 200, book_onsale
         
     def search_book_tag(self, book_tag, store_id): # 标签搜索
-        if func.store_id_exist == False:
+        if func1.store_id_exist == False:
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -365,7 +373,7 @@ class search_bookstore_action:
             return 200, book_onsale
 
     def search_book_author(self, book_author, store_id):   # 作家搜索(精确搜索)
-        if func.store_id_exist == False:
+        if func1.store_id_exist == False:
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -388,7 +396,7 @@ class search_bookstore_action:
             return 200, book_onsale
 
     def search_book_content(self, book_content, store_id): # 目录搜索
-        if func.store_id_exist == False:
+        if func1.store_id_exist == False:
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -411,7 +419,7 @@ class search_bookstore_action:
             return 200, book_onsale
 
     def search_book_intro(self, book_intro, store_id): # 内容搜索
-        if func.store_id_exist == False:
+        if func1.store_id_exist == False:
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -437,41 +445,77 @@ class search_bookstore_action:
 # 用户可以查自已的历史订单，查看订单状态。
 class search_order_action:
     def search_order_history(self,user_id): # 历史订单是指已经完成的订单么
-        if func.user_id_exist(user_id) == False:
+        if func1.user_id_exist(user_id) == False:
             return error.error_exist_user_id
         else:
-            order_log = session.query(orderlist).filter(orderlist.user_id == user_id).all()
+            order_log = session.query(
+                orderlist.order_id,
+                orderlist.user_id,
+                orderlist.store_id,
+                orderlist.owner_id,
+                orderlist.book_id,
+                orderlist.book_num,
+                orderlist.order_money,
+                orderlist.order_status,
+                orderlist.order_time).filter(orderlist.owner_id == user_id).all()
             if order_log == []:
                 return error.error_and_message_code(527)
             return 200, order_log
 
     def search_order_history_seller(self,seller_id): # 历史订单是指已经完成的订单么
-        if func.user_id_exist(seller_id) == False:
+        if func1.user_id_exist(seller_id) == False:
             return error.error_exist_user_id
         else:
-            order_log = session.query(orderlist).filter(orderlist.owner_id == seller_id).all()
+            order_log = session.query(
+                orderlist.order_id,
+                orderlist.user_id,
+                orderlist.store_id,
+                orderlist.owner_id,
+                orderlist.book_id,
+                orderlist.book_num,
+                orderlist.order_money,
+                orderlist.order_status,
+                orderlist.order_time).filter(orderlist.owner_id == seller_id).all()
             if order_log == []:
                 return error.error_and_message_code(527)
             return 200, order_log
 
     def search_order_status(self,user_id,order_id):
-        if func.user_id_exist(user_id) == False:
+        if func1.user_id_exist(user_id) == False:
             return error.error_exist_user_id
-        elif func.order_id_exist(order_id) == False:
+        elif func1.order_id_exist(user_id,order_id) == False:
             return error.error_invalid_order_id
         else:
-            order_log = session.query(orderlist).filter(orderlist.user_id == user_id, orderlist.order_id == order_id).one()
+            order_log = session.query(
+                orderlist.order_id,
+                orderlist.user_id,
+                orderlist.store_id,
+                orderlist.owner_id,
+                orderlist.book_id,
+                orderlist.book_num,
+                orderlist.order_money,
+                orderlist.order_status,
+                orderlist.order_time).filter(orderlist.user_id == user_id, orderlist.order_id == order_id).one()
             if order_log == []:
                 return error.error_and_message_code(527)
             return 200, order_log
 
     def search_order_status_seller(self,seller_id,store_id):
-        if func.user_id_exist(seller_id) == False:
+        if func1.user_id_exist(seller_id) == False:
             return error.error_exist_user_id
-        elif func.store_id_exist(store_id) == False:
+        elif func1.store_id_exist(store_id) == False:
             return error.error_invalid_order_id
         else:
-            order_log = session.query(orderlist).filter(orderlist.owner_id == seller_id, orderlist.store_id == store_id).one()
+            order_log = session.query(
+                orderlist.order_id,
+                orderlist.user_id,
+                orderlist.store_id,
+                orderlist.owner_id,
+                orderlist.book_id,
+                orderlist.book_num,
+                orderlist.order_money,
+                orderlist.order_status,
+                orderlist.order_time).filter(orderlist.owner_id == seller_id, orderlist.store_id == store_id).one()
             if order_log == None:
                 return error.error_and_message_code(527)
             return 200, order_log

@@ -3,8 +3,13 @@ from sqlalchemy import ForeignKey, PrimaryKeyConstraint
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import json
-from model import error
-from model.db_conn import myuser,store,orderlist,store_bookstorage,store_booklist,extra_func
+# from model import error
+# from model.db_conn import myuser,store,orderlist,store_bookstorage,store_booklist,extra_func
+# pytest
+from be.model import error
+from be.model.db_conn import myuser,store,orderlist,store_bookstorage,store_booklist,extra_func
+
+
 
 
 
@@ -12,7 +17,7 @@ from model.db_conn import myuser,store,orderlist,store_bookstorage,store_booklis
 Base = declarative_base()
 
 # 初始化数据库连接:
-engine = create_engine('postgresql://wrl:12345@localhost:5432/bookstore')
+engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',echo = True)
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 Base.metadata.create_all(engine)
@@ -25,6 +30,7 @@ class seller_action:
             return error.error_non_exist_user_id(user_id)  # 用户名错误
         if (len(s) != 0):
             return error.error_exist_store_id(store_id)  # 店铺名错误
+        session.begin()
         new_store = store(store_id = store_id, owner_id = user_id)
         u[0].seller_or_not = 1
         session.add(new_store)
@@ -44,10 +50,8 @@ class seller_action:
         print(book_info_json)
         book_id = book_info_json.get('id')
         price = book_info_json.get('price')
+        session.begin()
         b = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).all()
-        print(book_id)
-        print(store_id)
-        print(len(b))
         if(len(b) != 0):
             return error.error_exist_book_id(book_id)   # 图书ID已存在
         
@@ -55,7 +59,7 @@ class seller_action:
         new_book_info = store_booklist(store_id = store_id, book_id = book_info_json.get('id'), title = book_info_json.get('title'), \
             author = book_info_json.get('author'), publisher = book_info_json.get('publisher'), original_title = book_info_json.get('original_title'), \
                 translator = book_info_json.get('translator'), pub_year = book_info_json.get('pub_year'), pages = book_info_json.get('pages'), \
-                    currency_unit = '???', binding = book_info_json.get('binding'), isbn = book_info_json.get('isbn'), author_intro = book_info_json.get('author_intro'), \
+                    currency_unit = '', binding = book_info_json.get('binding'), isbn = book_info_json.get('isbn'), author_intro = book_info_json.get('author_intro'), \
                         book_intro = book_info_json.get('book_intro'), content = book_info_json.get('content'), tags = book_info_json.get('tags'))
         session.add(new_book)
         session.add(new_book_info)
@@ -67,6 +71,9 @@ class seller_action:
         s = session.query(store).filter(store.store_id == store_id).all()
         if (len(s) == 0):
             return error.error_non_exist_store_id(store_id)  # 商铺ID不存在
+        if (s[0].owner_id != user_id):
+            return error.error_non_exist_user_id(user_id)  # user id不存在
+        session.begin()
         b = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).all()
         if(len(b) == 0):
             return error.error_non_exist_book_id(book_id)   # 图书ID不存在
@@ -76,6 +83,7 @@ class seller_action:
 
 
     def deliver(self, order_id):
+        session.begin()
         o = session.query(orderlist).filter(orderlist.order_id == order_id).all()
         if (len(o) == 0):
             return error.error_non_exist_store_id(order_id)  # ORDER_ID不存在
@@ -89,6 +97,7 @@ class seller_action:
             
 
     def recieve(self, order_id):
+        session.begin()
         o = session.query(orderlist).filter(orderlist.order_id == order_id).all()
         if (len(o) == 0):
             return error.error_non_exist_store_id(order_id)  # ORDER_ID不存在

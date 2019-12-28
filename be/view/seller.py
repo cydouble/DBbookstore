@@ -1,7 +1,8 @@
 #import app
 from flask import Blueprint, jsonify, request, render_template
 import json
-from model import seller
+# from model import seller
+from be.model import seller # pytest
 
 bp_seller = Blueprint("seller", __name__, url_prefix="/seller")
 
@@ -10,7 +11,8 @@ def seller_create_store():
     if request.method == "GET":
         return render_template("create_store.html")
     if request.method == "POST":
-        store_info = request.values.to_dict()
+        store_info = request.json
+        # store_info = request.values.to_dict()
         user_id = store_info.get("user_id")
         store_id = store_info.get("store_id")
         new_seller = seller.seller_action()
@@ -55,7 +57,8 @@ def deliver():
     if request.method == "GET":
         return render_template("deliver.html")
     if request.method == "POST":
-        order_info = request.values.to_dict()
+        # order_info = request.values.to_dict()
+        order_info = request.json
         order_id = order_info.get("order_id")
 
         the_order  = seller.seller_action()
@@ -68,7 +71,8 @@ def recieve():
     if request.method == "GET":
         return render_template("deliver.html")
     if request.method == "POST":
-        order_info = request.values.to_dict()
+        # order_info = request.values.to_dict()
+        order_info = request.json
         order_id = order_info.get("order_id")
 
         the_order  = seller.seller_action()

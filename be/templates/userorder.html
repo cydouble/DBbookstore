@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
     
-        <title>search for book</title>
+        <title>search order history</title>
         <script>
             onload=function(){
                 var sel=document.getElementById("way");
@@ -15,9 +15,9 @@
                 
                 sel.onchange=function(){
                     var op=this[this.selectedIndex].innerHTML.replace(/^\s+|\s+$/g,"");
-                    if(op=="order history"){
+                    if(op == "order history"){
                         document.fm1.style.display="block";
-                        document.fm2.style.display="nonde"; 
+                        document.fm2.style.display="none"; 
                     }else if(op=="certain order's status"){
                         document.fm1.style.display="none";
                         document.fm2.style.display="block"; 
@@ -28,7 +28,7 @@
         </script>
     </head> 
     <body>
-        <p>search books from:</p>
+        <p>search history for:</p>
         <select id="way">
         <option>order history</option>
         <option>certain order's status</option>

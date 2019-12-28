@@ -7,12 +7,12 @@ from werkzeug.security import generate_password_hash,check_password_hash    # �
 Base = declarative_base()
 class myuser(Base): # 存放user信息
     __tablename__ = 'myuser'
-    user_id = Column(String,primary_key = True)
+    user_id = Column(Text,primary_key = True)
     user_money = Column(Integer)
     user_address = Column(Text)
     user_tel = Column(Integer)
-    terminal = Column(String)
-    user_password = Column(String)
+    terminal = Column(Text)
+    user_password = Column(Text)
     seller_or_not = Column(Boolean)
     login_at = Column(Time)
     
@@ -33,12 +33,12 @@ class myuser(Base): # 存放user信息
 
 class store(Base): # 存放商店信息
     __tablename__ = 'store'
-    store_id = Column(String,primary_key = True)
-    owner_id = Column(String,ForeignKey('myuser.user_id'))
+    store_id = Column(Text,primary_key = True)
+    owner_id = Column(Text,ForeignKey('myuser.user_id'))
 
 class store_bookstorage(Base): # 存放上架关系（书店->上架->书）
     __tablename__ = 'store_bookstorage'
-    store_id = Column(String,ForeignKey('store.store_id'))
+    store_id = Column(Text,ForeignKey('store.store_id'))
     book_id = Column(Text,ForeignKey('book.id'))
     price = Column(Integer)
     storage = Column(Integer)
@@ -48,7 +48,7 @@ class store_bookstorage(Base): # 存放上架关系（书店->上架->书）
     )
 class store_booklist(Base): # 书籍信息
     __tablename__ = 'store_booklist'
-    store_id = Column(String,ForeignKey('store.store_id'))
+    store_id = Column(Text,ForeignKey('store.store_id'))
     book_id  = Column(Text,ForeignKey('book.id'))
     title = Column(Text)
     author = Column(Text)
@@ -72,16 +72,19 @@ class store_booklist(Base): # 书籍信息
 
 class orderlist(Base): # 订单信息
     __tablename__ = 'orderlist'
-    order_id = Column(Integer, primary_key = True)
-    user_id = Column(String,ForeignKey('myuser.user_id'))
-    store_id = Column(String,ForeignKey('store.store_id'))
-    owner_id = Column(String)
+    order_id = Column(Text)
+    user_id = Column(Text,ForeignKey('myuser.user_id'))
+    store_id = Column(Text,ForeignKey('store.store_id'))
+    owner_id = Column(Text)
     book_id = Column(Text,ForeignKey('book.id'))
     book_num = Column(Integer)
     order_money = Column(Integer)
     order_status = Column(Integer)  # 0:下单 1:付款  2:发货  3:收货  -1:取消
     order_time = Column(Time)
-    
+    __table_args__ = (
+        PrimaryKeyConstraint('order_id','book_id'),
+        {},
+    )
 
 class book(Base): # 书籍信息
     __tablename__ = 'book'
@@ -114,12 +117,12 @@ class extra_func:
         else:
             return True
 
-    def book_id_exist(self, store_id, book_id):
-        find_book = session.query(store_bookstorage).filter(store_bookstorage.store_id == store_id, store_bookstorage.book_id == book_id).first()
-        if find_book == None:
-            return False
-        else:
-            return True
+    # def book_id_exist(self, store_id, book_id):
+    #     find_book = session.query(store_bookstorage).filter(store_bookstorage.store_id == store_id, store_bookstorage.book_id == book_id).first()
+    #     if find_book == None:
+    #         return False
+    #     else:
+    #         return True
 
     def store_id_exist(self, store_id):
         find_store = session.query(store).filter(store.store_id == store_id).one()
@@ -127,6 +130,7 @@ class extra_func:
             return False
         else:
             return True
+
     def order_id_exist(self, user_id, order_id):
         find_order = session.query(orderlist).filter(orderlist.user_id == user_id, orderlist.order_id == order_id).first()
         if find_order == None:
@@ -134,12 +138,12 @@ class extra_func:
         else:
             return True
 
-    def book_onsale_or_not(self, store_id,book_id):
-        find_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).first()
-        if find_book == None:
-            return False
-        else:
-            return True
+    # def book_onsale_or_not(self, store_id,book_id):
+    #     find_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).first()
+    #     if find_book == None:
+    #         return False
+    #     else:
+    #         return True
 
     def user_have_order_or_not(self,user_id):
         order_info = session.query(orderlist).filter(orderlist.user_id == user_id).first()
@@ -153,13 +157,13 @@ class extra_func:
         find_user = session.query(myuser).filter(myuser.user_id == user_id).one()
         return find_user
 
-    def get_store_bookstorage(self, store_id, book_id):
-        find_book_storage = session.query(store_bookstorage).filter(store_bookstorage.store_id == store_id, store_bookstorage.book_id == book_id).one()
-        return find_book_storage
+    # def get_store_bookstorage(self, store_id, book_id):
+    #     find_book_storage = session.query(store_bookstorage).filter(store_bookstorage.store_id == store_id, store_bookstorage.book_id == book_id).one()
+    #     return find_book_storage
     
-    def get_store_booktext(self, store_id, book_id):
-        store_book_text = session.query(store_booklist).filter(store_booklist.book_id == book_id, store_booklist.store_id == store_id).one()
-        return store_book_text
+    # def get_store_booktext(self, store_id, book_id):
+    #     store_book_text = session.query(store_booklist).filter(store_booklist.book_id == book_id, store_booklist.store_id == store_id).one()
+    #     return store_book_text
 
     def get_order_info(self, user_id): # 比如说用户可能没有订单，则直接调用此函数回报错
         order_info = session.query(orderlist).filter(orderlist.user_id == user_id).one()
