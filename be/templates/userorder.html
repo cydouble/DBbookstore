@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">  
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+        <title>search for book</title>
+        <script>
+            onload=function(){
+                var sel=document.getElementById("way");
+                sel.children[0].selected=true;
+                document.fm1.style.display="block";
+                document.fm2.style.display="none";
+                
+                sel.onchange=function(){
+                    var op=this[this.selectedIndex].innerHTML.replace(/^\s+|\s+$/g,"");
+                    if(op=="order history"){
+                        document.fm1.style.display="block";
+                        document.fm2.style.display="nonde"; 
+                    }else if(op=="certain order's status"){
+                        document.fm1.style.display="none";
+                        document.fm2.style.display="block"; 
+                    }  
+                    
+                }
+            }
+        </script>
+    </head> 
+    <body>
+        <p>search books from:</p>
+        <select id="way">
+        <option>order history</option>
+        <option>certain order's status</option>
+        </select>
+        <form name="fm1" action="#" method="post">
+            <p>user id:<input type="text" name="username" required="required"></p>
+            <button type="submit">submit</button>
+        </form>
+        <form name="fm2" action="#" method="post">
+            <p>user id:<input type="text" name="username" required="required"></p>
+            <p>order id:<input type="text" name="orderid" required="required"></p>
+            <button type="submit">submit</button>
+        </form>
+    </body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">  
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+        <title>search for book</title>
+        <script>
+            onload=function(){
+                var sel=document.getElementById("way");
+                sel.children[0].selected=true;
+                document.fm1.style.display="none";
+                document.fm2.style.display="block";
+                
+                sel.onchange=function(){
+                    var op=this[this.selectedIndex].innerHTML.replace(/^\s+|\s+$/g,"");
+                    if(op=="whole station"){
+                        document.fm1.style.display="none";
+                        document.fm2.style.display="block"; 
+                    }else if(op=="certain store"){
+                        document.fm1.style.display="block";
+                        document.fm2.style.display="none"; 
+                    }  
+                    
+                }
+            }
+        </script>
+    </head> 
+    <body>
+        <p>search books from:</p>
+        <select id="way">
+        <option>whole station</option>
+        <option>certain store</option>
+        </select>
+        <form name="fm1" action="#" method="post">
+            <p>store_id<input type="text" name="store_id" required="required"></p>
+            <p>search by:</p>
+            <input type="radio" name="by" value="title" checked>title
+            <br>
+            <input type="radio" name="by" value="tags">tags
+            <br>
+            <input type="radio" name="by" value="author">author
+            <br>
+            <input type="radio" name="by" value="content">content
+            <br>
+            <input type="radio" name="by" value="bookintro">book introduction
+            <br>
+            <p>input<input type="text" name="by_what" required="required"></p>
+            <button type="submit">submit</button>
+        </form>
+        <form name="fm2" action="#" method="post">
+            <p>search by:</p>
+            <input type="radio" name="by" value="title" checked>title
+            <br>
+            <input type="radio" name="by" value="tags">tags
+            <br>
+            <input type="radio" name="by" value="author">author
+            <br>
+            <input type="radio" name="by" value="content">content
+            <br>
+            <input type="radio" name="by" value="bookintro">book introduction
+            <br>
+            <p>input<input type="text" name="by_what" required="required"></p>
+            <button type="submit">submit</button>
+        </form>
+    </body>
+</html>

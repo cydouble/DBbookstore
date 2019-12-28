@@ -57,7 +57,7 @@ class store_booklist(Base): # 书籍信息
     translator = Column(Text)
     pub_year = Column(Text)
     pages = Column(Integer)
-    price = Column(Integer)
+    # price = Column(Integer)
     currency_unit = Column(Text)
     binding = Column(Text)
     isbn = Column(Text)
@@ -124,6 +124,12 @@ class extra_func:
     def store_id_exist(self, store_id):
         find_store = session.query(store).filter(store.store_id == store_id).one()
         if find_store == None:
+            return False
+        else:
+            return True
+    def order_id_exist(self, user_id, order_id):
+        find_order = session.query(orderlist).filter(orderlist.user_id == user_id, orderlist.order_id == order_id).first()
+        if find_order == None:
             return False
         else:
             return True

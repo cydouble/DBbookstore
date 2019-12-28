@@ -68,10 +68,6 @@ class loginout_action:
 class register_action:
     def register(self,user_id,pwd):
         session = DBSession()
-        if len(user_id) == 0:
-            return error.error_and_message_code(521)
-        if len(pwd) == 0:
-            return error.error_and_message_code(522)
         if func.user_id_exist(user_id) == True:
             session.close()
             return error.error_exist_user_id(user_id) # 注册失败，用户名重复
