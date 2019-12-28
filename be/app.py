@@ -2,7 +2,7 @@ import os
 import sys
 from flask import Flask
 # from be.view import auth # pytest
-from view import auth,buyer
+from view import auth,buyer,seller
 # import db
 app = Flask(__name__)
 @app.route('/')
@@ -15,5 +15,6 @@ sys.path.append(file_dir)
 if __name__ == '__main__':
     app.register_blueprint(auth.bp)
     app.register_blueprint(buyer.bp_buyer)
+    app.register_blueprint(seller.bp_seller)
     app.config['JSON_AS_ASCII'] = False
     app.run()
