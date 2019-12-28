@@ -12,7 +12,76 @@ from model import error
 # import user
 
 bp_buyer = Blueprint("buyer",__name__,url_prefix="/buyer")
-      
+
+
+@bp_buyer.route("/new_order", methods=["GET","POST"])
+def new_order_page():
+    if request.method == "GET":
+        return render_template("new_order.html")
+    if request.method == "POST":
+        order_info = request.values.to_dict()
+        print(order_info)
+        user_id = order_info.get("user_id")
+        print(user_id)
+        store_id = order_info.get("store_id")
+        print(store_id)
+        books_str = order_info.get("book_info")
+        books: [] = json.loads(books_str)
+        print(books)
+
+        id_and_count = []
+        for book in books:
+            book_id = book.get("id")
+            count = book.get("count")
+            id_and_count.append((book_id, count))
+
+        b = buyer_action()
+        code, message, order_id = b.new_order(user_id, store_id, id_and_count)
+        return jsonify({"message": message, "order_id": order_id}), code
+
+
+@bp_buyer.route("/payment", methods=["GET","POST"])
+def payment_page():
+    if request.method == "GET":
+        return render_template("payment.html")
+    if request.method == "POST":
+        payment_info = request.values.to_dict()
+        user_id: str = payment_info.get("username")
+        order_id: str = payment_info.get("order_id")
+        password: str = payment_info.get("password")
+        b = buyer_action()
+        code, message = b.payment(user_id, password, order_id)
+        return jsonify({"message": message}), code
+
+
+@bp_buyer.route("/add_funds", methods=["GET","POST"])
+def add_funds_page():
+    if request.method == "GET":
+        return render_template("add_funds.html")
+    if request.method == "POST":
+        add_funds_info = request.values.to_dict()
+        user_id = add_funds_info.get('username')
+        password = add_funds_info.get('password')
+        add_value = int(add_funds_info.get('add_value'))
+        b = buyer_action()
+        code, message = b.add_funds(user_id, password, add_value)
+        return jsonify({"message": message}), code
+
+
+@bp_buyer.route("/cancel_order", methods=["GET","POST"])
+def cancel_order_page():
+    if request.method == "GET":
+        return render_template("cancel_order.html")
+    if request.method == "POST":
+        cancel_info = request.values.to_dict()
+        user_id = cancel_info.get('username')
+        password = cancel_info.get('password')
+        order_id = cancel_info.get('order_id')
+        b = buyer_action()
+        code, message = b.cancel_order(user_id, password, order_id)
+        return jsonify({"message": message}), code
+
+
 @bp_buyer.route("/book",methods=('GET','POST'))
 def searching_book():
     if request.method == "GET":
@@ -66,6 +135,7 @@ def searching_book():
                 out.append(js)
         return jsonify({"message":msg}),code
 
+
 @bp_buyer.route("/myorder",methods=('GET','POST'))
 def user_order():      
     if request.method == "GET":
@@ -84,6 +154,7 @@ def user_order():
             return jsonify({"message":msg}),code
         else:
             return error.error_and_message_code(522)
+
 
 @bp_buyer.route("/myorder/seller", methods=("GET","POST"))
 # @auth.login_required

@@ -16,6 +16,188 @@ DBSession = sessionmaker(bind=engine)
 func = extra_func()
 session = DBSession()
 
+
+# 订单状态
+#  0:下单  1:付款  2:发货  3:收货  -1:取消
+class buyer_action:
+    def new_order(self, user_id, store_id, buy_book_list):  # 这里model里和test里面传入的参数不同
+        """"
+        @:param: user_id：买家id (str)
+                 store_id：商铺id (str)
+                 buy_book_list：下单图书列表 (book_id, count)
+        @:return: order_id
+        """
+
+        order_id = ""
+        # 创建session对象
+        session = DBSession()
+        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
+        find_store = session.query(store).filter(store.store_id == store_id).first()
+        if find_user is None:
+            session.close()
+            return error.error_non_exist_user_id(user_id),order_id  # 买家用户ID不存在  # 511
+
+        if find_store is None:
+            session.close()
+            return error.error_non_exist_store_id(store_id),order_id  # 商铺ID不存在  # 513
+
+        if find_user is not None and find_store is not None:
+            now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
+            now_store = session.query(store).filter(store.store_id == store_id).one()
+            new_order_id = uuid.uuid1()
+            for book_id, count in buy_book_list:
+                find_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id).first()
+                # 在该商铺中判断是否有该图书
+                if find_book is None:
+                    session.close()
+                    return error.error_non_exist_book_id(book_id),order_id  # 该图书不存在  # 515
+                else:
+                    now_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id).one()
+                    stock_number = now_book.storage
+                    if stock_number < count:
+                        session.close()
+                        return error.error_stock_level_low(book_id),order_id  # 商品库存不足  # 517
+                    else:
+                        # 减库存
+                        now_book.storage = stock_number - 1
+                        # 添加新的订单信息
+                        new_order = orderlist(
+                            order_id=new_order_id,
+                            user_id=now_user.user_id,
+                            store_id=now_store.store_id,
+                            owner_id=now_store.owner_id,
+                            book_id=book_id,
+                            book_num=count,
+                            order_money=count * now_book.price,
+                            order_status=0,
+                            order_time=time.time())
+                        session.add(new_order)
+                        session.commit()
+
+            session.close()
+            return 200, "ok", order_id
+
+    def payment(self, user_id, pwd, order_id):
+        """"
+        @:param: user_id：买家id (str)
+                 pwd：买家密码 (str)
+                 order_id：订单id (str)
+        @:return: status code：交易状态的识别码
+        """
+        session = DBSession()
+        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
+        if find_user is None:
+            session.close()
+            return error.error_non_exist_user_id(user_id)  # 买家用户ID不存在  # 511
+        else:
+            now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
+            right_pwd = now_user.check_password(pwd)
+            if not right_pwd:
+                session.close()
+                return error.error_authorization_fail()  # 密码不正确，授权失败 # 401
+            else:
+                # # 解析order_id字符串
+                # get_order_id = order_id.split(',')
+                # for one_order_id in get_order_id:
+                find_order = session.query(orderlist).filter(orderlist.order_id == order_id).first()
+                if find_order is None:
+                    session.close()
+                    return error.error_invalid_order_id(order_id)  # 无效订单 # 518
+                else:
+                    now_order = session.query(orderlist).filter(orderlist.order_id == order_id).all()
+                    now_order_money = session.query(func.sum(orderlist.order_money)).filter(orderlist.order_id == order_id).scalar()
+                    now_user_money = now_user.user_money
+                    if now_user_money < now_order_money:
+                        session.close()
+                        return error.error_not_sufficient_funds(order_id)  # 余额不足 # 519
+                    else:
+                        now_owner = session.query(myuser).filter(myuser.user_id == find_order.owner_id).one()
+                        now_owner_money = now_owner.user_money
+                        # 修改订单状态
+                        for one_order in now_order:
+                            one_order.order_status = 1;  # 0 -> 1
+                            session.add(one_order)
+                        # 修改用户账户金额
+                        now_user.user_money = now_user_money - now_order_money
+                        session.add(now_user)
+                        now_owner.user_money = now_owner_money + now_order_money
+                        session.add(now_owner)
+                        session.commit()
+                        session.close()
+                        return 200, "ok"
+
+    def add_funds(self, user_id, pwd, add_value):
+        """"
+        @:param: user_id：买家id (str)
+                 pwd：买家密码 (str)
+                 add_value：充值金额 (int)
+        @:return: status code：交易状态的识别码
+        """
+        print('this is add_funds')
+        session = DBSession()
+        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
+        if find_user is None:
+            session.close()
+            return error.error_non_exist_user_id(user_id)  # 买家用户ID不存在  # 511
+        else:
+            now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
+            right_pwd = now_user.check_password(pwd)
+            if not right_pwd:
+                session.close()
+                return error.error_authorization_fail()  # 密码不正确，授权失败 # 401
+            else:
+                if add_value < 0:
+                    session.close()
+                    return error.error_invalid_add_value(add_value)
+                else:
+                    # 修改用户账户金额
+                    now_user.user_money = now_user.user_money + add_value
+                    session.add(now_user)
+                    session.commit()
+                    session.close()
+                    return 200, "ok"
+
+    def cancel_order(self, user_id, pwd, order_id):
+        """"
+        @:param: user_id：买家id (str)
+                 pwd：买家密码 (str)
+                 order_id：订单id (str)
+        @:return: status code：交易状态的识别码
+        """
+        session = DBSession()
+        find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
+        if find_user is None:
+            session.close()
+            return error.error_non_exist_user_id(user_id)  # 买家用户ID不存在  # 511
+        else:
+            now_user = session.query(myuser).filter(myuser.user_id == user_id).one()
+            right_pwd = now_user.check_password(pwd)
+            if not right_pwd:
+                session.close()
+                return error.error_authorization_fail()  # 密码不正确，授权失败 # 401
+            else:
+                find_order = session.query(orderlist).filter(orderlist.order_id == order_id).first()
+                if find_order is None:
+                    session.close()
+                    return error.error_invalid_order_id(order_id)  # 无效订单 # 518
+                elif find_order.order_status != 0:
+                    session.close()
+                    return error.error_invalid_cancel_order(order_id)  # 不可取消该订单 # 518
+                else:
+                    now_order = session.query(orderlist).filter(orderlist.order_id == order_id).all()
+                    for one_order in now_order:
+                        one_order.order_status = -1
+                        session.add(one_order)
+                        now_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == one_order.book_id).first()
+                        now_book.storage += 1
+                        session.add(now_book)
+
+                    session.commit()
+                    session.close()
+                    return 200, "ok"
+
+
+
 # 搜索图书 
 # 用户可以通过关键字搜索，参数化的搜索方式；
 # 如搜索范围包括，题目，标签，目录，内容；全站搜索或是当前店铺搜索。

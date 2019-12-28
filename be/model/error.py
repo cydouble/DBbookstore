@@ -18,7 +18,8 @@ error_code = {
     525: "Unregisted failed for the seller with stores",
     526: "No book meet your requirments",
     527: "No record in order history meet your requirments",
-    528: "",
+    528: "invalid add_value {}",
+    529: "can't cancel this order, order id {}"
 }
 
 
@@ -62,8 +63,17 @@ def error_authorization_fail():
     return 401, error_code[401]
 
 
+def error_invalid_add_value(add_value):
+    return 528, error_code[528].format(add_value)
+
+
+def error_invalid_cancel_order(order_id):
+    return 529, error_code[529].format(order_id)
+
+
 def error_and_message(code, message):
     return code, message
+
 
 def error_and_message_code(code):
     return code, error_code[code]
