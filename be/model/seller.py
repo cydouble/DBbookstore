@@ -17,7 +17,8 @@ from be.model.db_conn import myuser,store,orderlist,store_bookstorage,store_book
 Base = declarative_base()
 
 # 初始化数据库连接:
-engine = create_engine('postgresql://wrl:12345@localhost:5432/bookstore',echo = True)
+# engine = create_engine('postgresql://wrl:12345@localhost:5432/bookstore',echo = True)
+engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',echo = True)
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 Base.metadata.create_all(engine)
@@ -66,18 +67,18 @@ class seller_action:
         session.commit()
         return 200, 'ok'
 
-    def remove_book(self, seller_id, store_id, book_info):
-        u = session.query(myuser).filter(myuser.user_id == seller_id).all()
-        s = session.query(store).filter(store.store_id == store_id).all()
-        book_info_json = json.loads(book_info)
-        book_id = book_info_json.get('id')
-        b = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).all()
-        # if(len(b) == 0):
-        #     return 200,"already removed"   # 图书ID已存在
-        session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id).delete() 
-        session.query(store_booklist).filter(store_booklist.book_id == book_id).delete() 
-        session.commit()
-        return 200,"ok"
+    # def remove_book(self, seller_id, store_id, book_info):
+    #     u = session.query(myuser).filter(myuser.user_id == seller_id).all()
+    #     s = session.query(store).filter(store.store_id == store_id).all()
+    #     book_info_json = json.loads(book_info)
+    #     book_id = book_info_json.get('id')
+    #     b = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).all()
+    #     # if(len(b) == 0):
+    #     #     return 200,"already removed"   # 图书ID已存在
+    #     session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id).delete() 
+    #     session.query(store_booklist).filter(store_booklist.book_id == book_id).delete() 
+    #     session.commit()
+    #     return 200,"ok"
 
 
     def add_stock_level(self, user_id, store_id, book_id, add_stock_level):

@@ -8,8 +8,8 @@ bp_seller = Blueprint("seller", __name__, url_prefix="/seller")
 
 @bp_seller.route("/create_store", methods=('GET','POST'))
 def seller_create_store():
-    if request.method == "GET":
-        return render_template("create_store.html")
+    # if request.method == "GET":
+    #     return render_template("create_store.html")
     if request.method == "POST":
         store_info = request.json
         # store_info = request.values.to_dict()
@@ -22,8 +22,8 @@ def seller_create_store():
 
 @bp_seller.route("/add_book", methods=('GET','POST'))
 def add_book():
-    if request.method == "GET":
-        return render_template("add_book.html")
+    # if request.method == "GET":
+    #     return render_template("add_book.html")
     if request.method == "POST":
         book_infomation = request.json
         seller_id = book_infomation.get("user_id")
@@ -37,8 +37,8 @@ def add_book():
 
 @bp_seller.route("/add_stock_level", methods=('GET','POST'))
 def add_stock_level():
-    if request.method == "GET":
-        return render_template("add_stock_level.html")
+    # if request.method == "GET":
+    #     return render_template("add_stock_level.html")
     if request.method == "POST":
         # storage_info = request.values.to_dict()
         storage_info = request.json
@@ -54,8 +54,8 @@ def add_stock_level():
 
 @bp_seller.route("/deliver", methods=('GET','POST'))
 def deliver():
-    if request.method == "GET":
-        return render_template("deliver.html")
+    # if request.method == "GET":
+    #     return render_template("deliver.html")
     if request.method == "POST":
         # order_info = request.values.to_dict()
         order_info = request.json
@@ -68,8 +68,8 @@ def deliver():
 
 @bp_seller.route("/recieve", methods=('GET','POST'))
 def recieve():
-    if request.method == "GET":
-        return render_template("deliver.html")
+    # if request.method == "GET":
+    #     return render_template("deliver.html")
     if request.method == "POST":
         # order_info = request.values.to_dict()
         order_info = request.json
@@ -79,13 +79,13 @@ def recieve():
         code, message = the_order.recieve(order_id)
         return jsonify({"message": message}), code
 
-@bp_seller.route("/remove_book", methods=('GET','POST'))
-def remove_book():
-    if request.method == "POST":
-        book_infomation = request.json
-        seller_id = book_infomation.get("user_id")
-        store_id = book_infomation.get("store_id")
-        book_info = book_infomation.get("book_info")
-        new_seller = seller.seller_action()
-        code, message = new_seller.remove_book(seller_id, store_id, json.dumps(book_info))
-        return jsonify({"message": message}), code
+# @bp_seller.route("/remove_book", methods=('GET','POST'))
+# def remove_book():
+#     if request.method == "POST":
+#         book_infomation = request.json
+#         seller_id = book_infomation.get("user_id")
+#         store_id = book_infomation.get("store_id")
+#         book_info = book_infomation.get("book_info")
+#         new_seller = seller.seller_action()
+#         code, message = seller.remove_book(seller_id, store_id, json.dumps(book_info))
+#         return jsonify({"message": message}), code

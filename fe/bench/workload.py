@@ -8,7 +8,14 @@ from fe.access.new_buyer import register_new_buyer
 from fe.access.buyer import Buyer
 from fe import conf
 
-
+# logging.basicConfig(level=logging.INFO,#控制台打印的日志级别
+#                 filename='test.log',
+#                 filemode='a',##模式，有w和a，w就是写模式，每次都会重新写日志，覆盖之前的日志
+#                 #a是追加模式，默认如果不写的话，就是追加模式
+#                 format=
+#                 '%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s'
+#                 #日志格式
+#                 )
 class NewOrder:
     def __init__(self, buyer: Buyer, store_id, book_id_and_count):
         self.buyer = buyer
@@ -105,11 +112,16 @@ class Workload:
         store_id = self.store_ids[store_no]
         books = random.randint(1, 10)
         book_id_and_count = []
+        book_temp = []
         for i in range(0, books):
             book_no = int(random.uniform(0, len(self.book_ids) - 1))
             book_id = self.book_ids[book_no]
-            count = random.randint(1, 10)
-            book_id_and_count.append((book_id, count))
+            if book_id in book_temp:
+                continue
+            else:
+                book_temp.append(book_id)
+                count = random.randint(1, 10)
+                book_id_and_count.append((book_id, count))
         b = Buyer(url_prefix=conf.URL, user_id=buyer_id, password=buyer_password)
         new_ord = NewOrder(b, store_id, book_id_and_count)
         return new_ord
@@ -131,3 +143,4 @@ class Workload:
                          self.n_new_order_ok, self.n_new_order, self.time_new_order / self.n_new_order,
                          self.n_payment_ok, self.n_payment, self.time_payment / self.n_payment))
         self.lock.release()
+

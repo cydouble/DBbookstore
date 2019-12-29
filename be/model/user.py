@@ -11,7 +11,8 @@ from be.model.db_conn import myuser,store,orderlist,extra_func
 # from model import error
 # from model.db_conn import myuser,store,orderlist,extra_func
 
-engine = create_engine('postgresql://wrl:12345@localhost:5432/bookstore',echo = True)
+# engine = create_engine('postgresql://wrl:12345@localhost:5432/bookstore',echo = True)
+engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',echo = True)
 DBSession = sessionmaker(bind=engine)
 
 func = extra_func()

@@ -6,10 +6,23 @@ from flask import request
 from be.view import auth
 from be.view import seller
 from be.view import buyer
+from be.model.myscheduler import scheduler
 # from be.model.store import init_database
 
 bp_shutdown = Blueprint("shutdown", __name__)
 
+class APSchedulerJobConfig(object):
+    JOBS =[
+        {
+            'id': 'auto_cancel_order',
+            'func': 'be.model.myscheduler:job_func',
+            'args': None,
+            'trigger': 'interval',  # 定时类型
+            'minutes': 1  # 每分钟执行一次
+        }
+    ]
+    SCHEDULER_API_ENABLED = True
+    SQLALCHEMY_ECHO = True
 
 def shutdown_server():
     func = request.environ.get("werkzeug.server.shutdown")
@@ -30,7 +43,7 @@ def be_run():
     log_file = os.path.join(parent_path, "app.log")
     # init_database(parent_path)
 
-    logging.basicConfig(filename=log_file, level=logging.ERROR)
+    logging.basicConfig(filename=log_file, level=logging.INFO)
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
         "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"
@@ -39,6 +52,9 @@ def be_run():
     logging.getLogger().addHandler(handler)
 
     app = Flask(__name__)
+    app.config.from_object(APSchedulerJobConfig)
+    scheduler.init_app(app)
+    scheduler.start()
     app.register_blueprint(bp_shutdown)
     app.register_blueprint(auth.bp)
     app.register_blueprint(seller.bp_seller)

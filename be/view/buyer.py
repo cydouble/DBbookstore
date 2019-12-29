@@ -92,8 +92,8 @@ def cancel_order_page():
 
 @bp_buyer.route("/book",methods=('GET','POST'))
 def searching_book():
-    if request.method == "GET":
-        return render_template("search.html")
+    # if request.method == "GET":
+    #     return render_template("search.html")
     if request.method == "POST":
         user_info = request.json
         # user_info = request.values.to_dict()
@@ -149,8 +149,8 @@ def searching_book():
 
 @bp_buyer.route("/myorder",methods=('GET','POST'))
 def user_order():      
-    if request.method == "GET":
-        return render_template("userorder.html")
+    # if request.method == "GET":
+    #     return render_template("userorder.html")
     if request.method == "POST":
         user_info = request.json
         print("!!!!!!!!!!!!!",user_info)
