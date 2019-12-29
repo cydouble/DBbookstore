@@ -30,9 +30,9 @@ class seller_action:
             return error.error_non_exist_user_id(user_id)  # 用户名错误
         if (len(s) != 0):
             return error.error_exist_store_id(store_id)  # 店铺名错误
-        session.begin()
+        # session.begin()
         new_store = store(store_id = store_id, owner_id = user_id)
-        u[0].seller_or_not = 1
+        u[0].seller_or_not = True
         session.add(new_store)
         session.commit()
         return 200, 'ok'
@@ -50,7 +50,7 @@ class seller_action:
         print(book_info_json)
         book_id = book_info_json.get('id')
         price = book_info_json.get('price')
-        session.begin()
+        # session.begin()
         b = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).all()
         if(len(b) != 0):
             return error.error_exist_book_id(book_id)   # 图书ID已存在
@@ -66,6 +66,19 @@ class seller_action:
         session.commit()
         return 200, 'ok'
 
+    def remove_book(self, seller_id, store_id, book_info):
+        u = session.query(myuser).filter(myuser.user_id == seller_id).all()
+        s = session.query(store).filter(store.store_id == store_id).all()
+        book_info_json = json.loads(book_info)
+        book_id = book_info_json.get('id')
+        b = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).all()
+        # if(len(b) == 0):
+        #     return 200,"already removed"   # 图书ID已存在
+        session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id).delete() 
+        session.query(store_booklist).filter(store_booklist.book_id == book_id).delete() 
+        session.commit()
+        return 200,"ok"
+
 
     def add_stock_level(self, user_id, store_id, book_id, add_stock_level):
         s = session.query(store).filter(store.store_id == store_id).all()
@@ -73,7 +86,7 @@ class seller_action:
             return error.error_non_exist_store_id(store_id)  # 商铺ID不存在
         if (s[0].owner_id != user_id):
             return error.error_non_exist_user_id(user_id)  # user id不存在
-        session.begin()
+        # session.begin()
         b = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id, store_bookstorage.store_id == store_id).all()
         if(len(b) == 0):
             return error.error_non_exist_book_id(book_id)   # 图书ID不存在
@@ -83,7 +96,7 @@ class seller_action:
 
 
     def deliver(self, order_id):
-        session.begin()
+        # session.begin()
         o = session.query(orderlist).filter(orderlist.order_id == order_id).all()
         if (len(o) == 0):
             return error.error_non_exist_store_id(order_id)  # ORDER_ID不存在
@@ -97,7 +110,7 @@ class seller_action:
             
 
     def recieve(self, order_id):
-        session.begin()
+        # session.begin()
         o = session.query(orderlist).filter(orderlist.order_id == order_id).all()
         if (len(o) == 0):
             return error.error_non_exist_store_id(order_id)  # ORDER_ID不存在

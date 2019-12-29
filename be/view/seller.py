@@ -78,3 +78,14 @@ def recieve():
         the_order  = seller.seller_action()
         code, message = the_order.recieve(order_id)
         return jsonify({"message": message}), code
+
+@bp_seller.route("/remove_book", methods=('GET','POST'))
+def remove_book():
+    if request.method == "POST":
+        book_infomation = request.json
+        seller_id = book_infomation.get("user_id")
+        store_id = book_infomation.get("store_id")
+        book_info = book_infomation.get("book_info")
+        new_seller = seller.seller_action()
+        code, message = new_seller.remove_book(seller_id, store_id, json.dumps(book_info))
+        return jsonify({"message": message}), code

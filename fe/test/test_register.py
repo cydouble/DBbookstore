@@ -3,6 +3,7 @@ import time
 import pytest
 
 from fe.access import auth
+from fe.access.new_seller import register_new_seller
 from fe import conf
 
 
@@ -41,3 +42,4 @@ class TestRegister:
 
         code = self.auth.register(self.user_id, self.password)
         assert code != 200
+    

@@ -46,3 +46,5 @@ class TestNewOrder:
         assert ok
         code, _ = self.buyer.new_order(self.store_id + "_x", buy_book_id_list)
         assert code != 200
+
+    

@@ -19,8 +19,8 @@ bp_buyer = Blueprint("buyer",__name__,url_prefix="/buyer")
 
 @bp_buyer.route("/new_order", methods=["GET","POST"])
 def new_order_page():
-    if request.method == "GET":
-        return render_template("new_order.html")
+    # if request.method == "GET":
+    #     return render_template("new_order.html")
     if request.method == "POST":
         order_info = request.json
         # order_info = request.values.to_dict()
@@ -47,8 +47,8 @@ def new_order_page():
 
 @bp_buyer.route("/payment", methods=["GET","POST"])
 def payment_page():
-    if request.method == "GET":
-        return render_template("payment.html")
+    # if request.method == "GET":
+    #     return render_template("payment.html")
     if request.method == "POST":
         payment_info = request.json
         # payment_info = request.values.to_dict()
@@ -62,8 +62,8 @@ def payment_page():
 
 @bp_buyer.route("/add_funds", methods=["GET","POST"])
 def add_funds_page():
-    if request.method == "GET":
-        return render_template("add_funds.html")
+    # if request.method == "GET":
+    #     return render_template("add_funds.html")
     if request.method == "POST":
         add_funds_info = request.json
         # add_funds_info = request.values.to_dict()
@@ -77,12 +77,12 @@ def add_funds_page():
 
 @bp_buyer.route("/cancel_order", methods=["GET","POST"])
 def cancel_order_page():
-    if request.method == "GET":
-        return render_template("cancel_order.html")
+    # if request.method == "GET":
+    #     return render_template("cancel_order.html")
     if request.method == "POST":
         cancel_info = request.json
         # cancel_info = request.values.to_dict()
-        user_id = cancel_info.get('username')
+        user_id = cancel_info.get('user_id')
         password = cancel_info.get('password')
         order_id = cancel_info.get('order_id')
         b = buyer.buyer_action()
@@ -102,8 +102,10 @@ def searching_book():
         by_what = user_info.get('by_what')
         print(user_info)
         if store_id == None:
+            print("!!!!!!!!!!")
             sbk = buyer.search_bookstation_action()
             if by == 'title':
+                print("!!!!!!!!!!")
                 code, msg = sbk.search_book_title(by_what)
             if by == 'tags':
                 code, msg = sbk.search_book_tag(by_what)
@@ -125,23 +127,23 @@ def searching_book():
                 code, msg = sbk.search_book_content(by_what, store_id)
             if by == 'bookintro':
                 code, msg = sbk.search_book_intro(by_what, store_id)
-        out = []
-        print(code)
-        if code == 200:
-            for m in msg:
-                dic = {
-                    'title': m[0], 
-                    'original_title': m[1],
-                    'author': m[2],
-                    'tags': m[3],
-                    'price': m[4],
-                    'store_id': m[5],
-                    'storage': m[6],
-                    'book_intro': m[7],
-                    'content': m[8]}
-                js = json.dumps(dic,indent=4,ensure_ascii=False)
-                print(js)
-                out.append(js)
+        # out = []
+        # print(code)
+        # if code == 200:
+        #     for m in msg:
+        #         dic = {
+        #             'title': m[0], 
+        #             'original_title': m[1],
+        #             'author': m[2],
+        #             'tags': m[3],
+        #             'price': m[4],
+        #             'store_id': m[5],
+        #             'storage': m[6],
+        #             'book_intro': m[7],
+        #             'content': m[8]}
+        #         js = json.dumps(dic,indent=4,ensure_ascii=False)
+        #         print(js)
+        #         out.append(js)
         return jsonify({"message":msg}),code
 
 
@@ -151,46 +153,47 @@ def user_order():
         return render_template("userorder.html")
     if request.method == "POST":
         user_info = request.json
+        print("!!!!!!!!!!!!!",user_info)
         # user_info = request.values.to_dict()
         user_orderlist = buyer.search_order_action()
-        user_id = user_info.get('username')
-        order_id = user_info.get('orderid')
-        user = about_token.verify_token(auth.token)
-        if user ==  None:
-            code,msg = error.error_authorization_fail()
-            return jsonify({"message":msg}),code
-        if user.user_id == user_id:
-            if order_id == None:
-                code,msg = user_orderlist.search_order_history(user_id)
-            else:
-                code,msg = user_orderlist.search_order_status(user_id,order_id)
-            return jsonify({"message":msg}),code
+        user_id = user_info.get('user_id')
+        order_id = user_info.get('order_id')
+        # user = about_token.verify_token(auth.token)
+        # if user ==  None:
+        #     code,msg = error.error_authorization_fail()
+        #     return jsonify({"message":msg}),code
+        # if user.user_id == user_id:
+        if order_id == None:
+            code,msg = user_orderlist.search_order_history(user_id)
         else:
-            return error.error_and_message_code(522)
+            code,msg = user_orderlist.search_order_status(user_id,order_id)
+        return jsonify({"message":msg}),code
+        # else:
+        #     return error.error_and_message_code(522)
 
 
-@bp_buyer.route("/myorder/seller", methods=("GET","POST"))
-# @auth.login_required
-def seller_order():   
-    #拿到token，去换取用户信息
-    # print(request.headers())
-    # token = request.headers['Authorization']
-    if request.method == "GET":
-        return render_template("sellerorder.html")
-    if request.method == "POST":
-        user_info = request.json
-        # user_info = request.values.to_dict()
-        user_orderlist = buyer.search_order_action()
-        user_id = user_info.get('username')
-        store_id = user_info.get('storeid')
-        user = about_token.verify_token(auth.token)
-        if user.user_id == user_id:
-            if store_id == None:
-                code,msg = user_orderlist.search_order_history_seller(user_id)
-            else:
-                code,msg = user_orderlist.search_order_status_seller(user_id,store_id)
-            return jsonify({"message":msg}),code
-        else:
-            return error.error_and_message_code(522)
+# @bp_buyer.route("/myorder/seller", methods=("GET","POST"))
+# # @auth.login_required
+# def seller_order():   
+#     #拿到token，去换取用户信息
+#     # print(request.headers())
+#     # token = request.headers['Authorization']
+#     if request.method == "GET":
+#         return render_template("sellerorder.html")
+#     if request.method == "POST":
+#         user_info = request.json
+#         # user_info = request.values.to_dict()
+#         user_orderlist = buyer.search_order_action()
+#         user_id = user_info.get('username')
+#         store_id = user_info.get('storeid')
+#         user = about_token.verify_token(auth.token)
+#         if user.user_id == user_id:
+#             if store_id == None:
+#                 code,msg = user_orderlist.search_order_history_seller(user_id)
+#             else:
+#                 code,msg = user_orderlist.search_order_status_seller(user_id,store_id)
+#             return jsonify({"message":msg}),code
+#         else:
+#             return error.error_and_message_code(522)
 
 

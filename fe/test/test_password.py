@@ -45,3 +45,7 @@ class TestPassword:
 
         code, new_token = self.auth.login(self.user_id, self.new_password, self.terminal)
         assert code != 200
+
+    def test_error_samepwd(self):
+        code = self.auth.password(self.user_id, self.old_password, self.old_password)
+        assert code == 520

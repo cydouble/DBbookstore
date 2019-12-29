@@ -16,7 +16,7 @@ engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',ech
 DBSession = sessionmaker(bind=engine)
 
 func1 = extra_func()
-session = DBSession()
+#session = DBSession()
 
 
 # 订单状态
@@ -32,7 +32,8 @@ class buyer_action:
         
         new_order_id = ""
         # 创建session对象
-        session.begin()
+        # session.begin()
+        session = DBSession()
         find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
         find_store = session.query(store).filter(store.store_id == store_id).first()
         if find_user is None:
@@ -48,7 +49,6 @@ class buyer_action:
             now_store = session.query(store).filter(store.store_id == store_id).one()
             new_order_id = uuid.uuid1()
             for book_id, count in buy_book_list:
-
                 find_book = session.query(store_bookstorage).filter(store_bookstorage.book_id == book_id).first()
                 # 在该商铺中判断是否有该图书
                 if find_book is None:
@@ -92,7 +92,8 @@ class buyer_action:
         @:return: status code：交易状态的识别码
         """
 
-        session.begin()
+        # session.begin()
+        session = DBSession()
         find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
         if find_user is None:
             session.close()
@@ -142,7 +143,8 @@ class buyer_action:
         @:return: status code：交易状态的识别码
         """
 
-        session.begin()
+        # session.begin()
+        session = DBSession()
         find_user = session.query(myuser).filter(myuser.user_id == user_id).first()
         if find_user is None:
             session.close()
@@ -214,6 +216,7 @@ class buyer_action:
 
 class search_bookstation_action:
     def search_book_title(self,book_title): # 标题搜索（考虑original title）
+        session = DBSession()
         book_onsale = session.query(
             store_booklist.title,
             store_booklist.original_title,
@@ -229,10 +232,13 @@ class search_bookstation_action:
             store_bookstorage.book_id == store_booklist.book_id).filter(
                 store_booklist.title.like('%' + book_title + '%')).all()
         if book_onsale == []:
+            session.close()
             return error.error_and_message_code(526)
+        session.close()
         return 200, book_onsale
         
     def search_book_tag(self,book_tag): # 标签搜索
+        session = DBSession()
         book_onsale = session.query(
             store_booklist.title,
             store_booklist.original_title,
@@ -248,10 +254,13 @@ class search_bookstation_action:
             store_bookstorage.book_id == store_booklist.book_id).filter(
                 store_booklist.tags.like('%' + book_tag + '%')).all()
         if book_onsale == []:
+            session.close()
             return error.error_and_message_code(526)
+        session.close()
         return 200, book_onsale
 
     def search_book_author(self,book_author):   # 作家搜索(精确搜索)
+        session = DBSession()
         book_onsale = session.query(
             store_booklist.title,
             store_booklist.original_title,
@@ -267,10 +276,13 @@ class search_bookstation_action:
             store_bookstorage.book_id == store_booklist.book_id).filter(
                 store_booklist.author.like('%' + book_author + '%')).all()
         if book_onsale == []:
+            session.close()
             return error.error_and_message_code(526)
+        session.close()
         return 200, book_onsale
 
     def search_book_content(self,book_content): # 目录搜索
+        session = DBSession()
         book_onsale = session.query(
             store_booklist.title,
             store_booklist.original_title,
@@ -286,10 +298,13 @@ class search_bookstation_action:
             store_bookstorage.book_id == store_booklist.book_id).filter(
                 store_booklist.content.like('%' + book_content + '%')).all()
         if book_onsale == []:
+            session.close()
             return error.error_and_message_code(526)
+        session.close()
         return 200, book_onsale
 
     def search_book_intro(self,book_intro): # 内容搜索
+        session = DBSession()
         book_onsale = session.query(
             store_booklist.title,
             store_booklist.original_title,
@@ -305,7 +320,9 @@ class search_bookstation_action:
             store_bookstorage.book_id == store_booklist.book_id).filter(
                 store_booklist.book_intro.like('%' + book_intro + '%')).all()
         if book_onsale == []:
+            session.close()
             return error.error_and_message_code(526)
+        session.close()
         return 200, book_onsale
     
 class search_bookstore_action:
@@ -327,7 +344,9 @@ class search_bookstore_action:
     #             return error.error_and_message_code(526)
     #         return 200, book_onsale
     def search_book_title(self, book_title, store_id): # 标题搜索（考虑original title）
+        session = DBSession()
         if func1.store_id_exist == False:
+            session.close()
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -346,11 +365,15 @@ class search_bookstore_action:
                     store_booklist.store_id == store_id,
                     store_booklist.title.like('%' + book_title + '%')).all()
             if book_onsale == []:
+                session.close()
                 return error.error_and_message_code(526)
+            session.close()
             return 200, book_onsale
         
     def search_book_tag(self, book_tag, store_id): # 标签搜索
+        session = DBSession()
         if func1.store_id_exist == False:
+            session.close()
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -369,11 +392,15 @@ class search_bookstore_action:
                     store_booklist.store_id == store_id,
                     store_booklist.tags.like('%' + book_tag + '%')).all()
             if book_onsale == []:
+                session.close()
                 return error.error_and_message_code(526)
+            session.close()
             return 200, book_onsale
 
     def search_book_author(self, book_author, store_id):   # 作家搜索(精确搜索)
+        session = DBSession()
         if func1.store_id_exist == False:
+            session.close()
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -392,11 +419,16 @@ class search_bookstore_action:
                     store_booklist.store_id == store_id,
                     store_booklist.author.like('%' + book_author + '%')).all()
             if book_onsale == []:
+                session.close()
                 return error.error_and_message_code(526)
+
+            session.close()
             return 200, book_onsale
 
     def search_book_content(self, book_content, store_id): # 目录搜索
+        session = DBSession()
         if func1.store_id_exist == False:
+            session.close()
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -415,11 +447,16 @@ class search_bookstore_action:
                     store_booklist.store_id == store_id,
                     store_booklist.content.like('%' + book_content + '%')).all()
             if book_onsale == []:
+                session.close()
                 return error.error_and_message_code(526)
+            
+            session.close()
             return 200, book_onsale
 
     def search_book_intro(self, book_intro, store_id): # 内容搜索
+        session = DBSession()
         if func1.store_id_exist == False:
+            session.close()
             return error.error_exist_store_id
         else:
             book_onsale = session.query(
@@ -438,14 +475,19 @@ class search_bookstore_action:
                     store_booklist.store_id == store_id,
                     store_booklist.book_intro.like('%' + book_intro + '%')).all()
             if book_onsale == []:
+                session.close()
                 return error.error_and_message_code(526)
+            
+            session.close()
             return 200, book_onsale
 
 # 订单状态/订单查询
 # 用户可以查自已的历史订单，查看订单状态。
 class search_order_action:
     def search_order_history(self,user_id): # 历史订单是指已经完成的订单么
+        session = DBSession()
         if func1.user_id_exist(user_id) == False:
+            session.close()
             return error.error_exist_user_id
         else:
             order_log = session.query(
@@ -457,33 +499,39 @@ class search_order_action:
                 orderlist.book_num,
                 orderlist.order_money,
                 orderlist.order_status,
-                orderlist.order_time).filter(orderlist.owner_id == user_id).all()
+                orderlist.order_time).filter(orderlist.user_id == user_id).all()
             if order_log == []:
+                session.close()
                 return error.error_and_message_code(527)
+            
+            session.close()
             return 200, order_log
 
-    def search_order_history_seller(self,seller_id): # 历史订单是指已经完成的订单么
-        if func1.user_id_exist(seller_id) == False:
-            return error.error_exist_user_id
-        else:
-            order_log = session.query(
-                orderlist.order_id,
-                orderlist.user_id,
-                orderlist.store_id,
-                orderlist.owner_id,
-                orderlist.book_id,
-                orderlist.book_num,
-                orderlist.order_money,
-                orderlist.order_status,
-                orderlist.order_time).filter(orderlist.owner_id == seller_id).all()
-            if order_log == []:
-                return error.error_and_message_code(527)
-            return 200, order_log
+    # def search_order_history_seller(self,seller_id): # 历史订单是指已经完成的订单么
+    #     if func1.user_id_exist(seller_id) == False:
+    #         return error.error_exist_user_id
+    #     else:
+    #         order_log = session.query(
+    #             orderlist.order_id,
+    #             orderlist.user_id,
+    #             orderlist.store_id,
+    #             orderlist.owner_id,
+    #             orderlist.book_id,
+    #             orderlist.book_num,
+    #             orderlist.order_money,
+    #             orderlist.order_status,
+    #             orderlist.order_time).filter(orderlist.owner_id == seller_id).all()
+    #         if order_log == []:
+    #             return error.error_and_message_code(527)
+    #         return 200, order_log
 
     def search_order_status(self,user_id,order_id):
+        session = DBSession()
         if func1.user_id_exist(user_id) == False:
+            session.close()
             return error.error_exist_user_id
         elif func1.order_id_exist(user_id,order_id) == False:
+            session.close()
             return error.error_invalid_order_id
         else:
             order_log = session.query(
@@ -495,29 +543,31 @@ class search_order_action:
                 orderlist.book_num,
                 orderlist.order_money,
                 orderlist.order_status,
-                orderlist.order_time).filter(orderlist.user_id == user_id, orderlist.order_id == order_id).one()
+                orderlist.order_time).filter(orderlist.user_id == user_id, orderlist.order_id == order_id).all()
             if order_log == []:
+                session.close()
                 return error.error_and_message_code(527)
+            session.close()
             return 200, order_log
 
-    def search_order_status_seller(self,seller_id,store_id):
-        if func1.user_id_exist(seller_id) == False:
-            return error.error_exist_user_id
-        elif func1.store_id_exist(store_id) == False:
-            return error.error_invalid_order_id
-        else:
-            order_log = session.query(
-                orderlist.order_id,
-                orderlist.user_id,
-                orderlist.store_id,
-                orderlist.owner_id,
-                orderlist.book_id,
-                orderlist.book_num,
-                orderlist.order_money,
-                orderlist.order_status,
-                orderlist.order_time).filter(orderlist.owner_id == seller_id, orderlist.store_id == store_id).one()
-            if order_log == None:
-                return error.error_and_message_code(527)
-            return 200, order_log
+    # def search_order_status_seller(self,seller_id,store_id):
+    #     if func1.user_id_exist(seller_id) == False:
+    #         return error.error_exist_user_id
+    #     elif func1.store_id_exist(store_id) == False:
+    #         return error.error_invalid_order_id
+    #     else:
+    #         order_log = session.query(
+    #             orderlist.order_id,
+    #             orderlist.user_id,
+    #             orderlist.store_id,
+    #             orderlist.owner_id,
+    #             orderlist.book_id,
+    #             orderlist.book_num,
+    #             orderlist.order_money,
+    #             orderlist.order_status,
+    #             orderlist.order_time).filter(orderlist.owner_id == seller_id, orderlist.store_id == store_id).one()
+    #         if order_log == None:
+    #             return error.error_and_message_code(527)
+    #         return 200, order_log
 
 

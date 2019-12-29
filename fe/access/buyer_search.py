@@ -26,16 +26,16 @@ class Buyer:
         response_json = r.json()
         return r.status_code, response_json.get("order_id")
 
-    def payment(self,  order_id: str):
-        json = {"user_id": self.user_id, "password": self.password, "order_id": order_id}
-        url = urljoin(self.url_prefix, "payment")
+    def user_order_status(self, user_id, order_id: str) -> int:
+        json = {"user_id": self.user_id, "order_id": order_id}
+        url = urljoin(self.url_prefix, "myorder")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
 
-    def add_funds(self, add_value: str) -> int:
-        json = {"user_id": self.user_id, "password": self.password, "add_value": add_value}
-        url = urljoin(self.url_prefix, "add_funds")
+    def user_order(self, user_id) -> int:
+        json = {"user_id": self.user_id}
+        url = urljoin(self.url_prefix, "myorder")
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
         return r.status_code

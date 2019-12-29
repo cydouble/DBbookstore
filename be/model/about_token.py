@@ -22,12 +22,9 @@ def verify_token(token):
     try:
         #转换为字典
         data = s.loads(token)
-        print("*******************",data)
     except SignatureExpired:
-        print("*******************")
         return None
     except BadSignature:
-        print("*******************")
         return None
     #拿到转换后的数据，根据模型类去数据库查询用户信息
     now_user = func.get_user(data['user_id'])

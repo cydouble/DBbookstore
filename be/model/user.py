@@ -102,18 +102,18 @@ class register_action:
                 if now_user.seller_or_not == True:
                     return error.error_and_message_code(524)
                 else:
-                    if func.user_have_order_or_not(user_id) == False:
-                        session.query(myuser).filter(myuser.user_id == user_id).delete() ## 这个是否需要删除
-                        session.commit()
-                        return 200,"ok"
-                    else:
-                        user_order = func.get_order_info(user_id)
-                        if user_order.order_status == 3 | user_order.order_status < 0:
-                            session.query(myuser).filter(myuser.user_id == user_id).delete() ## 这个是否需要删除
-                            session.commit()
-                            return 200,"ok"
-                        else:
-                            return error.error_and_message_code(525)
+                    # if func.user_have_order_or_not(user_id) == False:
+                    session.query(myuser).filter(myuser.user_id == user_id).delete() ## 这个是否需要删除
+                    session.commit()
+                    return 200,"ok"
+                #     else:
+                #         user_order = func.get_order_info(user_id)
+                #         if user_order.order_status == 3 | user_order.order_status < 0:
+                #             session.query(myuser).filter(myuser.user_id == user_id).delete() ## 这个是否需要删除
+                #             session.commit()
+                #             return 200,"ok"
+                #         else:
+                #             return error.error_and_message_code(525)
         
     # def unregister_seller(self,seller_id,pwd): ## 注销一个seller
     #     session = DBSession()

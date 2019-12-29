@@ -66,3 +66,5 @@ class TestPayment:
 
         code = self.buyer.payment(self.order_id)
         assert code != 200
+    
+        

@@ -12,14 +12,14 @@ from be.model import user # pytest
 bp = Blueprint("mul",__name__,url_prefix="/auth")
 token = ''
 auth = HTTPBasicAuth()
-@bp.route("/")
-def home_page():
-    return "please give url like login or register to buy some books."
+# @bp.route("/")
+# def home_page():
+#     return "please give url like login or register to buy some books."
   
 @bp.route("/register",methods=('GET','POST'))
 def register_page():
-  if request.method == "GET":
-    return render_template("register.html")
+  # if request.method == "GET":
+    # return render_template("register.html")
   if request.method == "POST":
     user_info = request.json
     # user_info = request.values.to_dict()
@@ -29,8 +29,8 @@ def register_page():
 
 @bp.route("/unregister",methods=('GET','POST'))
 def unregister_page():
-  if request.method == "GET":
-    return render_template("register.html")
+  # if request.method == "GET":
+  #   return render_template("register.html")
   if request.method == "POST":
     user_info = request.json
     # user_info = request.values.to_dict()
@@ -40,8 +40,8 @@ def unregister_page():
   
 @bp.route("/login", methods=("GET", "POST"))  # 指定请求方式，如果不指定，则无法匹配到请求
 def login():
-  if request.method == "GET":   # GET请求
-    return render_template("login.html")
+  # if request.method == "GET":   # GET请求
+  #   return render_template("login.html")
   if request.method == "POST":   # POST请求
     user_info = request.json
     # user_info = request.values.to_dict()   # request.values获取数据并转化成字典
@@ -56,15 +56,15 @@ def login():
 
 @bp.route("/logout", methods=("GET", "POST"))  # 指定请求方式，如果不指定，则无法匹配到请求
 def logout():
-  if request.method == "GET":   # GET请求
-    return render_template("logout.html")
+  # if request.method == "GET":   # GET请求
+  #   return render_template("logout.html")
   if request.method == "POST":   # POST请求
     user_info = request.json
     # user_info = request.values.to_dict()   # request.values获取数据并转化成字典
     logo = user.loginout_action()
     token = request.headers['token']
     # global token
-    print("@@@@@@@@@@@@@@@@@",token)
+    # print("@@@@@@@@@@@@@@@@@",token)
     user_exit = about_token.verify_token(token)
     if user_exit != None:
       code,msg = logo.logout(user_info.get('user_id'))
@@ -74,8 +74,8 @@ def logout():
 
 @bp.route("/password", methods=("GET", "POST"))  # 指定请求方式，如果不指定，则无法匹配到请求
 def change_pwd():
-  if request.method == "GET":   # GET请求
-    return render_template("password.html")
+  # if request.method == "GET":   # GET请求
+  #   return render_template("password.html")
   if request.method == "POST":   # POST请求
     user_info = request.json
     # user_info = request.values.to_dict()   # request.values获取数据并转化成字典
