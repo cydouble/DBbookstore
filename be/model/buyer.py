@@ -12,7 +12,7 @@ from be.model.db_conn import myuser,store,orderlist,store_booklist,store_booksto
 # from model import error
 # from model.db_conn import myuser,store,orderlist,store_booklist,store_bookstorage,extra_func
 
-engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',echo = True)
+engine = create_engine('postgresql://wrl:12345@localhost:5432/bookstore',echo = True)
 DBSession = sessionmaker(bind=engine)
 
 func1 = extra_func()
@@ -345,9 +345,9 @@ class search_bookstore_action:
     #         return 200, book_onsale
     def search_book_title(self, book_title, store_id): # 标题搜索（考虑original title）
         session = DBSession()
-        if func1.store_id_exist == False:
+        if func1.store_id_exist(store_id) == False:
             session.close()
-            return error.error_exist_store_id
+            return error.error_non_exist_store_id(store_id)
         else:
             book_onsale = session.query(
                 store_booklist.title,
@@ -372,9 +372,9 @@ class search_bookstore_action:
         
     def search_book_tag(self, book_tag, store_id): # 标签搜索
         session = DBSession()
-        if func1.store_id_exist == False:
+        if func1.store_id_exist(store_id) == False:
             session.close()
-            return error.error_exist_store_id
+            return error.error_non_exist_store_id(store_id)
         else:
             book_onsale = session.query(
                 store_booklist.title,
@@ -399,9 +399,9 @@ class search_bookstore_action:
 
     def search_book_author(self, book_author, store_id):   # 作家搜索(精确搜索)
         session = DBSession()
-        if func1.store_id_exist == False:
+        if func1.store_id_exist(store_id) == False:
             session.close()
-            return error.error_exist_store_id
+            return error.error_non_exist_store_id(store_id)
         else:
             book_onsale = session.query(
                 store_booklist.title,
@@ -427,9 +427,9 @@ class search_bookstore_action:
 
     def search_book_content(self, book_content, store_id): # 目录搜索
         session = DBSession()
-        if func1.store_id_exist == False:
+        if func1.store_id_exist(store_id) == False:
             session.close()
-            return error.error_exist_store_id
+            return error.error_non_exist_store_id(store_id)
         else:
             book_onsale = session.query(
                 store_booklist.title,
@@ -455,9 +455,9 @@ class search_bookstore_action:
 
     def search_book_intro(self, book_intro, store_id): # 内容搜索
         session = DBSession()
-        if func1.store_id_exist == False:
+        if func1.store_id_exist(store_id) == False:
             session.close()
-            return error.error_exist_store_id
+            return error.error_non_exist_store_id(store_id)
         else:
             book_onsale = session.query(
                 store_booklist.title,
@@ -488,7 +488,7 @@ class search_order_action:
         session = DBSession()
         if func1.user_id_exist(user_id) == False:
             session.close()
-            return error.error_exist_user_id
+            return error.error_non_exist_user_id(user_id)
         else:
             order_log = session.query(
                 orderlist.order_id,
@@ -529,10 +529,10 @@ class search_order_action:
         session = DBSession()
         if func1.user_id_exist(user_id) == False:
             session.close()
-            return error.error_exist_user_id
+            return error.error_non_exist_user_id(user_id)
         elif func1.order_id_exist(user_id,order_id) == False:
             session.close()
-            return error.error_invalid_order_id
+            return error.error_invalid_order_id(order_id)
         else:
             order_log = session.query(
                 orderlist.order_id,

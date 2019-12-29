@@ -17,7 +17,7 @@ from be.model.db_conn import myuser,store,orderlist,store_bookstorage,store_book
 Base = declarative_base()
 
 # 初始化数据库连接:
-engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',echo = True)
+engine = create_engine('postgresql://wrl:12345@localhost:5432/bookstore',echo = True)
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 Base.metadata.create_all(engine)
@@ -104,7 +104,7 @@ class seller_action:
             if (o[i].order_status == 1):
                 o[i].order_status = 2
             else:
-                return error.error_exist_book_id(orderlist)  # status != 1
+                return error.error_invalid_order_id(order_id)  # status != 1
         session.commit()
         return 200, 'ok'
             
@@ -118,7 +118,7 @@ class seller_action:
             if (o[i].order_status == 2):
                 o[i].order_status = 3
             else:
-                return error.error_exist_book_id(orderlist)  # status != 1
+                return error.error_invalid_order_id(order_id)  # status != 1
         session.commit()
         return 200, 'ok'
 

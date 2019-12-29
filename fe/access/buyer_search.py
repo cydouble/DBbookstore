@@ -6,6 +6,7 @@ from fe.access.auth import Auth
 
 class Buyer:
     def __init__(self, url_prefix, user_id, password):
+        self.url_prefix_seller = urljoin(url_prefix, "seller/")
         self.url_prefix = urljoin(url_prefix, "buyer/")
         self.user_id = user_id
         self.password = password
@@ -39,3 +40,32 @@ class Buyer:
         headers = {"token": self.token}
         r = requests.post(url, headers=headers, json=json)
         return r.status_code
+
+    def deliver(self, order_id):
+        json = {"order_id": order_id}
+        url = urljoin(self.url_prefix_seller, "deliver")
+        r = requests.post(url, json=json)
+        return r.status_code
+
+    def payment(self,  order_id: str):
+        json = {"user_id": self.user_id, "password": self.password, "order_id": order_id}
+        url = urljoin(self.url_prefix, "payment")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code
+
+    def add_funds(self, add_value: str) -> int:
+        json = {"user_id": self.user_id, "password": self.password, "add_value": add_value}
+        url = urljoin(self.url_prefix, "add_funds")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code
+
+    def recieve(self, order_id):
+        json = {"order_id": order_id}
+        url = urljoin(self.url_prefix_seller, "recieve")
+        r = requests.post(url, json=json)
+        return r.status_code
+    
+
+    

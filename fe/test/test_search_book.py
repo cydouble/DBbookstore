@@ -109,3 +109,25 @@ class TestSearchBook:
         assert code == 200
         code = self.seller.search_book_instore(self.store_id, self.list_by_what[4], self.list_by[4])
         assert code == 200
+
+    def test_search_title_error_store_id(self):
+        code = self.seller.search_book_instore(self.store_id + '_x', self.list_by_what[0], self.list_by[0])
+        assert code == 513
+    
+    def test_search_tags_error_store_id(self):
+        code = self.seller.search_book_instore(self.store_id + '_x', self.list_by_what[1], self.list_by[1])
+        assert code == 513
+
+    def test_search_author_error_store_id(self):
+        code = self.seller.search_book_instore(self.store_id + '_x', self.list_by_what[2], self.list_by[2])
+        assert code == 513
+
+    def test_search_bookintro_error_store_id(self):
+        code = self.seller.search_book_instore(self.store_id + '_x', self.list_by_what[3], self.list_by[3])
+        assert code == 513
+
+    def test_search_content_error_store_id(self):
+        code = self.seller.search_book_instore(self.store_id + '_x', self.list_by_what[4], self.list_by[4])
+        assert code == 513
+
+    

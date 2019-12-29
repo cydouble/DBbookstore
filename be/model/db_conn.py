@@ -105,7 +105,7 @@ class book(Base): # 书籍信息
     content = Column(Text)
     tags = Column(Text)
 
-engine = create_engine('postgresql://caoyunyun:postgres@127.0.0.1:5432/test',echo = True)
+engine = create_engine('postgresql://wrl:12345@localhost:5432/bookstore',echo = True)
 DBSession = sessionmaker(bind=engine)  
 session = DBSession() 
 
@@ -125,7 +125,7 @@ class extra_func:
     #         return True
 
     def store_id_exist(self, store_id):
-        find_store = session.query(store).filter(store.store_id == store_id).one()
+        find_store = session.query(store).filter(store.store_id == store_id).first()
         if find_store == None:
             return False
         else:
