@@ -20,7 +20,7 @@
 #     app.run()
 
 # from be import serve
-import serve # pytest
+# import serve # pytest
 
-if __name__ == "__main__":
-    serve.be_run()
+# if __name__ == "__main__":
+#     serve.be_run()

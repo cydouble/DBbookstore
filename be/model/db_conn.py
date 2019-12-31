@@ -50,8 +50,8 @@ class store_booklist(Base): # 书籍信息
     __tablename__ = 'store_booklist'
     store_id = Column(Text,ForeignKey('store.store_id'))
     book_id  = Column(Text,ForeignKey('book.id'))
-    title = Column(Text)
-    author = Column(Text)
+    title = Column(Text,index=True)
+    author = Column(Text,index=True)
     publisher = Column(Text)
     original_title = Column(Text)
     translator = Column(Text)
@@ -73,7 +73,7 @@ class store_booklist(Base): # 书籍信息
 class orderlist(Base): # 订单信息
     __tablename__ = 'orderlist'
     order_id = Column(Text)
-    user_id = Column(Text,ForeignKey('myuser.user_id'))
+    user_id = Column(Text,ForeignKey('myuser.user_id'),index=True)
     store_id = Column(Text,ForeignKey('store.store_id'))
     owner_id = Column(Text)
     book_id = Column(Text,ForeignKey('book.id'))
@@ -146,12 +146,12 @@ class extra_func:
     #     else:
     #         return True
 
-    def user_have_order_or_not(self,user_id):
-        order_info = session.query(orderlist).filter(orderlist.user_id == user_id).first()
-        if order_info == None:
-            return False
-        else:
-            return True
+    # def user_have_order_or_not(self,user_id):
+    #     order_info = session.query(orderlist).filter(orderlist.user_id == user_id).first()
+    #     if order_info == None:
+    #         return False
+    #     else:
+    #         return True
     
     # 注意：使用一下函数之前首先要判断一下查询的对象是否存在
     def get_user(self, user_id):

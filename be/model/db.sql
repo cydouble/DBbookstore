@@ -45,6 +45,9 @@ create table store_booklist( --书店书单表（文字）
     foreign key(store_id) references store(store_id),
     foreign key(book_id) references book(id));
 
+create index index_title on store_booklist(title);
+create index index_author on store_booklist(author);
+
 create table orderlist(  -- 订单表
     order_id TEXT ,
     user_id TEXT,
@@ -55,10 +58,12 @@ create table orderlist(  -- 订单表
     order_money INT,
     order_status INT, --0:下单 1:付款  2:发货  3:收货  -1:取消
     order_time FLOAT, 
-    primary key(order_id,book_id),  foreign key(user_id) references myuser(user_id),
+    primary key(order_id,book_id),  
+    foreign key(user_id) references myuser(user_id),
     foreign key(store_id) references store(store_id),
     foreign key(book_id) references book(id));
 
+create index index_user on orderlist(user_id);
 
 -- create table book   -- 最原始数据表
 --     (
